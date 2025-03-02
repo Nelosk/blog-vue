@@ -34,18 +34,19 @@
           <!-- 头像组件 -->
           <el-avatar
             @click="handleAvatarClick"
-            v-if="!userStore.userinfo.isLogged"
+            v-if="!token"
             :icon="UserFilled"
             :size="40"
             class="default-avatar"   
           />
           <el-avatar
-            @click="handleAvatarClick"
+            @click="handleLogout"
             v-else
             :src="userAvatar"
             :size="40"
             class="user-avatar"
           />
+          <Login ref="loginDialogRef" />
           <span class="username" style="margin-left: 10px">
             {{  userStore.userinfo.username}}
           </span>
@@ -56,13 +57,20 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref,computed } from "vue";
 import { UserFilled } from "@element-plus/icons-vue";
-import { useUserinfoStore } from "@/stores/useUserinfoStore";
+import { ElMessageBox, ElMessage } from 'element-plus';
+import { useUserStore } from "@/stores/useUserStore";
+import Login from "@/components/dialog/login.vue";
+import { storeToRefs } from "pinia";
 
-const userStore = useUserinfoStore();
-const id = ref(userStore.userinfo.id);
-const userAvatar = ref(userStore.userinfo.avatar);
+const userStore = useUserStore();
+const { userinfo } =storeToRefs(userStore);
+const token = computed(() => userStore.userinfo.token);
+const userAvatar = computed(() => userinfo.value.avatar);
+
+// const userAvatar = computed(() => userStore.userinfo.avatar);
+
 
 // const isLoggedIn = ref(userStore.isLoggedIn);
 
@@ -71,8 +79,33 @@ const handleSelect = (key: string, keyPath: string[]) => {
   console.log(key, keyPath);
 };
 
+const loginDialogRef = ref<InstanceType<typeof Login>>()
 const handleAvatarClick = () => {
-  console.log("avatar clicked");
+  console.log("弹出登录框");
+  loginDialogRef.value?.open()
+};
+// 登出逻辑
+const handleLogout = () => {
+    // 使用 ElMessageBox 弹出确认对话框
+    ElMessageBox.confirm('确定要登出吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+    })
+    .then(() => {
+        // 用户点击“确定”时执行的操作
+        clearUserInfo(); // 清除用户信息
+        ElMessage.success('已成功登出'); // 提示登出成功
+    })
+    .catch(() => {
+        // 用户点击“取消”时执行的操作
+        ElMessage.info('已取消登出'); // 提示取消登出
+    });
+};
+const clearUserInfo = () => {
+    userStore.clearUserInfo();
+    // 跳转到登录页面
+    // router.push('/login');
 };
 
 </script>
@@ -103,3 +136,4 @@ const handleAvatarClick = () => {
   }
 }
 </style>
+@/stores/useUserStore

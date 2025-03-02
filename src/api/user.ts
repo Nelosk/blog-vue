@@ -7,3 +7,11 @@ export function getUserInfo() {
     method: 'get'
   })    
 }
+
+export function tologin(data: any) {
+  return request({
+    url: '/login',
+    method: 'post',
+    data
+  })
+}
