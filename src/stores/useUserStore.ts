@@ -1,5 +1,5 @@
 
-import { getUserInfo, tologin } from "@/api/user"
+import { getUserInfo, tologin , toregister} from "@/api/user"
 import { getToken } from "@/utils/token";
 import { defineStore } from "pinia"
 import { ref, computed } from "vue"
@@ -25,15 +25,21 @@ export const useUserStore = defineStore('userStore', () => {
 		token: ''
 	})
 
-	// const token = computed(( )=> localStorage.getItem('token') || '')
-	// 判断用户是否登录
-	// const isLoggedIn = computed(() => !!token.value)
-	// const isLoggedIn = computed(() => {
-	// 	// if(userinfo.value.username !== '未登录') {
-	// 	// 	return true
-	// 	// }
-	// 	return userinfo.value.username !== '未登录';
-	// });
+
+	//  处理第三方登录回调(暂时)
+	 const handleOAuthCallback = async (data: {
+		token: string
+		user: UserInfo
+	  }) => {
+
+		userinfo.value.token = data.token
+		
+		// 更新用户信息
+		userinfo.value = {
+		  ...data.user,
+		}
+		
+	  }
 
 	// 获取用户信息
 	function getuserinfo() {
@@ -45,6 +51,18 @@ export const useUserStore = defineStore('userStore', () => {
 		})
 	}
 
+	async function register(credentials: { username: string; password: string; email: string }) {
+		try {
+			const res:any = await toregister(credentials)
+			if (res.code === 200) {
+				console.log(res);
+			}
+		} catch (error) {
+			console.error(error);
+	}
+}
+
+	// 登录
 	 async function login(credentials: { username: string; password: string }) {
 		try {
 			const res:any = await tologin(credentials)
@@ -54,10 +72,8 @@ export const useUserStore = defineStore('userStore', () => {
 				userinfo.value.token = getToken()??'';
 			}
 		} catch (error) {
-		    
+			console.error(error);
 		}
-
-		
 	  }
 
 	   // 清除用户信息
@@ -71,7 +87,7 @@ export const useUserStore = defineStore('userStore', () => {
     }
 
   
-	return { userinfo, getuserinfo,login,clearUserInfo }
+	return { userinfo, getuserinfo,login,register,clearUserInfo ,handleOAuthCallback }
 
 }, {
 	persist: {
